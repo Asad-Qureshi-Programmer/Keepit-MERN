@@ -55,13 +55,7 @@ const Login = () => {
 
     }
     catch(err){
-      try {
-        console.log("Warmup before login: ",err)
-        useEffect(() => {
-          axios.get("http://localhost:3000/")
-        }, [])
-
-      } catch (err) {
+     
         console.log("Error in Login: ",err)
 
         // Handle error message from server (if available)
@@ -72,7 +66,7 @@ const Login = () => {
 
         setError(errorMsg)
         handleError(errorMsg);
-      }
+      
     }
   }
 
