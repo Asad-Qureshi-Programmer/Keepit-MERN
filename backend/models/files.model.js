@@ -19,6 +19,10 @@ const fileSchema = new mongoose.Schema(
             type: mongoose.Schema.Types.ObjectId,
             ref: 'folders',
             default: null
+        },
+        publicId:{
+            type: String,
+            default: null
         }
     },
     {timestamps:true}

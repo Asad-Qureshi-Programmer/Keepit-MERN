@@ -1,5 +1,6 @@
 const folderModel = require('../models/folder.model')
 const fileModel = require('../models/files.model')
+const userModel = require('../models/user.model')
 
 exports.create = async (req , res)=>{
 
@@ -122,7 +123,11 @@ exports.getSharedFolders = async (req,res)=>{
     try {
         const userId = req.user.userId
         
-        const sharedFolders = await folderModel.find({sharedWith: userId})
+        const sharedFolders = await folderModel.find({sharedWith: userId}).populate("ownerId", "username email")
+        
+
+       
+
         res.status(200).json({success:true, folders:sharedFolders})
     } catch (error) {
         res.status(500).json({success:false, message:"Error fetching shared folders"})

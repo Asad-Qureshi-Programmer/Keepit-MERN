@@ -11,6 +11,7 @@ const authValidator = require('../middlewares/authValidator');
 router.use(express.json())
 router.use(express.urlencoded({extended:true}))
 
+
 exports.fetchUser = async(req, res)=>{
     if(!req.user) return res.status(401).json({message:"Unauthorized" , success:false})
     
@@ -106,25 +107,25 @@ exports.register  =async (req, res)=>{
 exports.login = async (req, res)=>{
     
     
-    const {username, password} = req.body
+    const {email, password} = req.body
 
-    if(!username || !password){
+    if(!email || !password){
         return res.status(400).json({
             message: 'All fields are required'
         })
     }
     
     
-    // find username in databse
+    // find email in databse
     const user = await userModel.findOne({
-        username:username
+        email:email
     })
 
     
 
     if(!user){
         return res.status(403).json({
-            message:"username or password is incorrect", success: false
+            message:"email or password is incorrect", success: false
         })
     }
 
@@ -135,18 +136,9 @@ exports.login = async (req, res)=>{
 
     if(!isMatched){
         return res.status(403).json({
-            message:"username or password is incorrect", success: false
+            message:"email or password is incorrect", success: false
         })
     }
-
-    // If user logged in successfully, to keep user logged in and keep user authorized, we generate token by jwt
-    // 2 parameters = 1)Pass User Info data, 2)Secret key stored in .env
-
-    // const token = jwt.sign({
-    //     userId: user._id,
-    //     username: user.username,
-    //     email: user.email
-    // }, process.env.JWT_SECRET)
 
     //access token- only for 1 session, send to frontend, stored in state in frontend, expires when website closed
     const accessToken = jwt.sign({
@@ -154,15 +146,15 @@ exports.login = async (req, res)=>{
         username: user.username,
         email: user.email
     }, process.env.ACCESS_TOKEN_SECRET,
-       {expiresIn: '1m'} )
+       {expiresIn: '30m'} )
 
     //refresh token- used to request new access token, stored in cookie, only accessed by server, not send to frotned, expiry time set to longer period (days)
     const refreshToken = jwt.sign({
         
-        username: user.username,
+        email: user.email,
         
     }, process.env.REFRESH_TOKEN_SECRET,
-       {expiresIn: '1d'} )
+       {expiresIn: '3d'} )
 
     //now we send the token generated from above to frontend through cookie-parser (cookies) = used to save token, session management etc (below is not rigt but kaam chalau)
     // import cookie-parser in server.js, and app.use(cookieParser())
@@ -176,7 +168,7 @@ exports.login = async (req, res)=>{
   sameSite: 'Lax',      // 'None' if you're on different domains, cross site cookie
   secure: false,        // set to true if using HTTPS
     path: "/", // ensures cookie applies site-wide
-  maxAge: 7*24*60*60*1000  //cookie expiry set to match refreshToken expiry
+  maxAge: 3*24*60*60*1000  //cookie expiry set to match refreshToken expiry
 })   
 
 //send access token containing username , email, id, roles (if any) to authorize and get data in frontend
@@ -201,7 +193,7 @@ exports.refresh = (req,res)=>{
         (async (err,decoded)=>{
             if(err) return res.status(403).json({message: 'Forbidden'})
             
-            const foundUser= await userModel.findOne({username: decoded.username})
+            const foundUser= await userModel.findOne({email: decoded.email})
             console.log("User found after RT verified: ", foundUser)
             if(!foundUser) return res.status(401).json({message: 'Unauthorized, user not found'})
 
@@ -211,7 +203,7 @@ exports.refresh = (req,res)=>{
                 email: foundUser.email
             },
             process.env.ACCESS_TOKEN_SECRET,
-            {expiresIn: '1m'}
+            {expiresIn: '30m'}
             )
 
             res.status(200).json({

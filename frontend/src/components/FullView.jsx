@@ -1,4 +1,13 @@
 import { useState, useEffect } from "react";
+import DocViewer, { DocViewerRenderers } from "react-doc-viewer";
+import PanZoom from "../features/filePreview/PanZoom";
+
+import { IoIosCloudDownload } from "react-icons/io";
+import { RxCross2 } from "react-icons/rx";
+import { IoIosArrowForward } from "react-icons/io";
+
+const MIN_ZOOM = 0.2;
+const MAX_ZOOM = 4;
 
 const FullView = ({ files, filepath, filename, setShowFullView }) => {
   const [buttonClicked, setButtonClicked] = useState({
@@ -12,8 +21,13 @@ const FullView = ({ files, filepath, filename, setShowFullView }) => {
   const [fileName, setFileName] = useState("");
   const [filePath, setFilePath] = useState("");
   const [data, setData] = useState("");
+  
+  const [zoom, setZoom] = useState(1);
 
   console.log("Current file index: ", currentFileIndex);
+
+
+
 
   useEffect(() => {
     if (buttonClicked.right === true) {
@@ -127,7 +141,7 @@ const FullView = ({ files, filepath, filename, setShowFullView }) => {
     const heading = rows[0].split(",");
     // console.log('Row  are : ',rows)
     return (
-      <table>
+      <table >
         <thead>
           <tr>
             {heading.map((key, i) => (
@@ -158,71 +172,93 @@ const FullView = ({ files, filepath, filename, setShowFullView }) => {
       <div
         className="fixed z-20 top-0 left-0 right-0 bottom-0 w-full h-full
        flex flex-col justify-center align-middle items-center "
+
+       
       >
         <div className="absolute top-0 left-0 right-0 bottom-0 w-full h-full bg-black opacity-80 backdrop-blur-2xl "></div>
 
-        <div className="absolute top-5 w-full  text-white flex justify-between px-16 z-20 align-middle">
-          <h2 className="text-xl font-medium ">{fileName}</h2>
+        <div className="absolute top-5 w-full  text-white flex justify-between px-16 z-60 align-middle">
+          <h2 className="text-xl font-medium ">{fileName+"."+filePath.split('.').pop()}</h2>
           <button
             onClick={() =>
               setShowFullView((prev) => ({ ...prev, [filepath]: false }))
             }
-            className="px-3 py-1 bg-blue-600 "
+            className="px-3 py-1  hover:bg-gray-600 rounded-full"
           >
-            back
+            <RxCross2 size={30} />
           </button>
         </div>
 
         <button
           onClick={() => setButtonClicked({ right: true, left: false })}
-          className="fixed top-[50%] right-10 text-white text-lg bg-blue-800 px-3 py-2 rounded-xl"
+          className="fixed top-[45%] flex items-center justify-center w-20 h-20  right-10 text-white text-lg  rounded-full  hover:bg-gray-600 z-50 hover:scale-110 transition-transform duration-110 active:scale-105"
         >
-          Right
+          <IoIosArrowForward size={50}/>
         </button>
         <button
           onClick={() => setButtonClicked({ right: false, left: true })}
-          className="fixed top-[50%] left-10 text-white text-lg bg-blue-800 px-3 py-2 rounded-xl"
+          className="fixed top-[45%] flex items-center justify-center left-10 text-white w-20 h-20 text-lg rounded-full  hover:bg-gray-600 z-50 hover:scale-110 transition-transform duration-110 active:scale-105 "
         >
-          Left
+          <IoIosArrowForward size={50} className="rotate-180"/>
         </button>
 
-        <div className=" text-white w-[50%] h-[70%]  p-10 flex flex-col z-20 justify-center align-middle items-center ">
+        <div className=" text-white w-[90%] h-[90%]  p-10 pt-0 flex flex-col z-20 justify-center align-middle items-center "
+        
+        >
           {
-            /\.(png|jpg|avif|webp)$/i.test(filePath) ? (
-              <img
+            /\.(png|jpg|jpeg|avif|webp)$/i.test(filePath) ? (
+              <PanZoom>
+
+                <img
                 src={filePath}
                 alt=""
-                className="w-full h-full object-contain  "
+                className="w-[60%] h-[70%] object-contain pointer-events-none no-browser-zoom"
+                draggable={false}
               />
+              </PanZoom>
             ) : /\.(pdf)$/i.test(filePath) ? (
               <iframe
                 src={filePath}
                 frameborder="0"
                 title="Pdf"
-                height="1000px"
-                width="100%"
+                height="90%"
+                width="70%"
               />
-            ) : /\.(xlsx|docx|pptx)$/i.test(filePath) ? (
-              <div>
+            ) : /\.(xlsx|docx|pptx|doc|ppt|xls)$/i.test(filePath) ? (
+              <div className="overflow-auto ">
                 <iframe
                   src={`https://view.officeapps.live.com/op/embed.aspx?src=${encodeURIComponent(
                     filePath
-                  )}`}
-                  height="500px"
-                  width="700px"
+                  )}&mode=Edit`}
+                  height="600px"
+                  width="1000px"
                 ></iframe>
               </div>
             ) : /\.(mp4|webm)$/i.test(filePath) ? (
-              <video controls src={filePath} width="400" />
+              <video controls src={filePath} width="100%" />
             ) : /\.(mp3|wav)$/i.test(filePath) ? (
-              <audio controls src={filePath} />
+              <audio controls src={filePath} width="200%" />
             ) : /\.(txt)$/i.test(filePath) ? (
-              <pre>{data}</pre>
+              <PanZoom><pre className="bg-white text-black p-5" >{data}</pre></PanZoom>
             ) : /\.(csv)$/i.test(filePath) ? (
-              csvTable()
+              <PanZoom>
+              <div className="bg-white text-black p-5" >
+
+               { csvTable()}
+              </div> 
+              </PanZoom>
             ) : /\.(json)$/i.test(filePath) ? (
-              jsonTable()
-            ) : null
+              <PanZoom>
+              <div className="bg-white text-black p-5 flex items-center max-h-[90%] overflow-auto ">
+
+                {jsonTable()}
+              </div>
+              </PanZoom>
+            ) : <div onClick={(e)=>{stopOpening(e)}} className="w-full h-full flex flex-col justify-center font-semibold text-gray-600 ">
+                <div className="text-center text-white text-3xl">Can't Open? Download instead</div>
+                <a className="h-[80%] flex items-center justify-center"  href={filepath}  ><IoIosCloudDownload size="70%" color="white" onMouseOver={({target})=>target.style.color="blue"}
+                onMouseOut={({target})=>target.style.color="white"} /></a>
+              </div>
 
             /*
                 else if (/\.(mp4|webm)$/i.test(filepath)) {
@@ -241,6 +277,25 @@ const FullView = ({ files, filepath, filename, setShowFullView }) => {
                 */
           }
         </div>
+
+          {/* <div className="fixed top-[90%] text-white text-2xl flex gap-3 z-50" >
+
+        <button
+        onClick={() => setZoom((z)=>Math.min(z+0.5,MAX_ZOOM))}
+        className=" bg-blue-800 p-5 rounded-full"
+        >
+          +
+        </button>
+
+        <button
+        onClick={() => setZoom((z)=>Math.max(z-0.5,MIN_ZOOM))}
+        className=" bg-blue-800 px-3 py-3 rounded-full"
+        >
+          -
+        </button>
+
+          </div> */}
+
       </div>
     </>
   );

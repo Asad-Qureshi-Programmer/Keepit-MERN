@@ -17,5 +17,8 @@ export default defineConfig({
     react(),
     tailwindcss(),
   ],
+  optimizeDeps: {
+    exclude: ["pdfjs-dist"],
+  },
   
 })

@@ -14,7 +14,7 @@ cloudinary.config({
     api_secret: process.env.CLOUDINARY_API_SECRET 
 });
 
-const uploadOnCloudinary = async (localFilePath, username, customName)=>{
+exports.uploadOnCloudinary = async (localFilePath, username, customName)=>{
     try{
         if(!localFilePath) return null
         const response = await cloudinary.uploader.upload(localFilePath, 
@@ -41,4 +41,17 @@ const uploadOnCloudinary = async (localFilePath, username, customName)=>{
     }
 }
 
-module.exports = uploadOnCloudinary
+exports.deleteMultipleAssets = async (publicIds)=> {
+    try {
+        const result = await cloudinary.api.delete_resources(publicIds, {
+            invalidate: true // Invalidate CDN cached copies (optional, but recommended)
+        });
+        console.log('Deletion result:', result);
+        return result;
+    } catch (error) {
+        console.error('Error deleting resources:', error);
+        throw error;
+    }
+}
+
+// module.exports = uploadOnCloudinary

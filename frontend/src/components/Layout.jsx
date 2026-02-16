@@ -4,15 +4,18 @@ import api from "../api/axios";
 import { handleSuccess, handleError } from "../utils/utils";
 import { UserContext } from "../contexts/UserContext";
 import { FileContext } from "../contexts/FileContext";
+import {useSearch} from "../contexts/SearchContext";
 import {FaHome} from 'react-icons/fa'
 import { MdStar } from "react-icons/md";
 import { MdCloudUpload } from "react-icons/md";
 import { CiSearch } from "react-icons/ci";
+import {Cloud} from 'lucide-react'
 
 const Layout = () => {
   const navigate = useNavigate();
   const { userData, setUserData } = useContext(UserContext);
   const { setShowPopup, setCreateFolder, setFileUploadInFolder, setFileUpload } = useContext(FileContext);
+  const {query, setQuery} = useSearch()
   const [openDropdown, setOpenDropdown] = useState(false)
   const location = useLocation()
   // const currentPathName = location.pathname
@@ -34,7 +37,7 @@ const Layout = () => {
 
   useEffect(() => {
     document.addEventListener('mousedown', closeOpenDropdown)
-          console.log("Useeffect called")
+          // console.log("Useeffect called")
 
     return () => {
       document.removeEventListener('mousedown', closeOpenDropdown)
@@ -65,24 +68,21 @@ const Layout = () => {
   return (
     <>
       <div className="flex ">
-        <aside className="secback-color p-5 w-[300px] h-full  border border-color flex flex-col justify-between fixed font-semibold text-lg ">
+        <aside className="secback-color p-5 w-[250px] h-full  border border-color flex flex-col justify-between fixed font-semibold text-md ">
           <div>
-            <div className="flex gap-2 align-middle m-3 mb-12 text-2xl">
-              <img
-                src="./assets/react.svg"
-                height="120px"
-                alt=""
-                className="invert"
-              />
-              <p>Keepit</p>
+            <div className="flex gap-2 align-middle items-center m-3 mb-10 text-2xl">
+              
+              <Cloud className="h-10 w-10 text-blue-600  rounded-full" />
+              <span className="text-3xl font-bold text-gray-900">KeepIt</span>
+            
             </div>
-            <div className="relative" >
+            <div className="relative " >
             <button
-              className="primary-color rounded-xl text-white px-5 py-5 m-5 flex gap-3 items-center mb-8"
+              className="w-[80%] mx-auto primary-color rounded-full text-white text-lg px-5 py-3 m-5 flex justify-center gap-2 items-center mb-8"
               ref={dropdownRef}
               onClick={() => setOpenDropdown(prev=>!prev)}
             >
-              <MdCloudUpload size={30} />
+              <MdCloudUpload size={20} />
               New
             </button>
 
@@ -112,7 +112,7 @@ const Layout = () => {
                   }`
                 }
               >
-                <FaHome size={20}/>
+                <FaHome size={18}/>
                 Home
               </NavLink>
 
@@ -124,7 +124,7 @@ const Layout = () => {
                   }`
                 }
               >
-                <MdStar size={20} />
+                <MdStar size={18} />
                 Shared
               </NavLink>
 
@@ -136,37 +136,46 @@ const Layout = () => {
                   }`
                 }
               >
-                <MdStar size={20}/>
+                <MdStar size={18}/>
                 Starred
               </NavLink>
             </ul>
           </div>
 
+          <div className="flex justify-center">
           <button
-            className="hover:bg-gray-200 text-start pl-8 rounded-lg py-2 primetext-color  mb-5"
+            className="w-fit hover:bg-red-600 transition-all text-start rounded-lg py-2 px-4 bg-red-500 text-white  mb-5"
             onClick={() => onLogoutClick()}
           >
             Logout
           </button>
+          </div>
         </aside>
 
-        <div className="ml-[300px] ">
-          <nav className=" bg-white w-[calc(100vw-300px)] z-10 px-10 flex justify-between border-b border-color p-5 sticky top-0">
-            <div className="flex gap-2 items-center w-[50%] px-8 py-4 rounded-4xl secondary-color text-xl primetext-color " >
-            <CiSearch size={30} />
+        <div className="ml-[250px] overflow-hidden">
+          <nav className=" bg-white w-[calc(100vw-250px)] z-10 px-10 flex justify-between border-b border-color p-3 sticky top-0">
+            <div className="flex gap-2 items-center w-[50%] px-8 py-4 rounded-4xl secondary-color text-lg primetext-color " >
+            <CiSearch size={26} />
 
             <input
               type="search"
               name="search"
               id="search"
+              value={query}
+              onChange={(e)=>setQuery(e.target.value)}
               className="outline-none w-full ml-3 placeholder-gray-900"
               placeholder="Search Files"
             />
             </div>
 
-            <div className="flex gap-2 text-lg font-semibold primetext-color ">
-              <img src="./assets/react.svg" alt="" />
-              <p>{userData? userData.username : "Loading..."}</p>
+            <div className="flex items-center gap-2 text-md font-semibold primetext-color ">
+              
+              <Cloud className="h-10 w-10 text-white bg-blue-600 p-2 rounded-full" />
+              
+              <div className="flex-col justify-start items-center ">
+              <p class="text-md font-semibold">{userData? userData.email : "Loading..."}</p>
+              <p className="text-gray-500 text-sm">{userData? userData.username : "Loading..."}</p>
+              </div>
             </div>
           </nav>
           <div>

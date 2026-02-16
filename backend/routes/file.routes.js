@@ -1,7 +1,6 @@
 const express = require('express')
 const router = express.Router();
 const upload = require('../middlewares/multer.middleware')
-const uploadOnCloudinary = require('../utils/cloudinary')
 const fileModel = require('../models/files.model')
 const authMiddleware = require('../middlewares/authValidator')
 const fileControllers = require('../controllers/fileControllers')
@@ -99,9 +98,10 @@ router.use(express.urlencoded({extended:true}))
 // module.exports = router
 
 router.get('/getFiles', authMiddleware, fileControllers.getFiles)
-router.post('/upload',authMiddleware, upload.single('file') /*pass here, the name of input field */ , fileControllers.upload)
+router.post('/upload',authMiddleware, upload.array('files') /*pass here, the name of input field */ , fileControllers.upload)
 router.get('/download/:fileId', authMiddleware, fileControllers.download)
 router.get('/delete/:fileId', authMiddleware, fileControllers.deleteFile)
+router.post('/delete',authMiddleware, fileControllers.deleteFileMany)
 
 // router.post('/upload/:folderId', authMiddleware, upload.single('file'), fileControllers.uploadFileToFolder)
 

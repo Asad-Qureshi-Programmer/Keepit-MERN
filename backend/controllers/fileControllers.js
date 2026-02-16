@@ -1,7 +1,9 @@
 const express = require('express')
 const router = express.Router();
+const cloudinary = require('cloudinary').v2
 const upload = require('../middlewares/multer.middleware')
-const uploadOnCloudinary = require('../utils/cloudinary')
+const uploadOnCloudinary = require('../utils/cloudinary').uploadOnCloudinary
+const deleteMultipleAssets = require('../utils/cloudinary').deleteMultipleAssets
 const fileModel = require('../models/files.model')
 const authMiddleware = require('../middlewares/authValidator')
 const axios = require('axios');
@@ -34,9 +36,11 @@ exports.getFiles = async(req,res)=>{
 exports.upload = async (req,res)=>{
     try{
 
-    if(!req.file){
+    if(!req.files || req.files.length==0){
         return res.status(400).json({ message: 'No file uploaded' });
     }
+
+    const files = req.files
 
     const folderId = req.query.folderId || null
 
@@ -49,23 +53,38 @@ exports.upload = async (req,res)=>{
             return res.status(403).json({success:false, message:"Not authorized to upload here"})
         }
     }
-
-    // console.log("name of file: ", req.file.originalname.split('.')[0])
-    const customName = req.file.originalname.split(".")[0] + Date.now()
-    const response = await uploadOnCloudinary(req.file.path, req.user.username, customName)
-    // console.log(req.file)
+    const uploadingFiles= []
+    for(const file of files){
+    
+    // console.log("name of file: ", file)
+    const customName = `${file.originalname.split(".")[0] + Date.now()}`
+    console.log("Customname: ",customName)
+    const response = await uploadOnCloudinary(file.path, req.user.username, customName)
+    
     // console.log(response)
+  
 
-    const newFile = await fileModel.create({
+    const newFile = {
         path: response.url,
         originalname: response.original_filename,
         user: req.user.userId ,
         //this is important as, you must be logged in to upload anything, thus it checks token through authMiddleware, only then req.user get userId
 
-        folderId
-    })
+        //customName is given as public_id to cloudinary.uploader.upload
+        publicId: (response.public_id.split('.').length>0)? response.public_id.split('.')[0] : response.public_id,
 
-    res.status(201).json(newFile)
+        folderId
+    }
+
+    uploadingFiles.push(newFile)
+    }
+    // console.log("Uploading Files:  ",uploadingFiles)
+    
+    const uploadedFiles = await fileModel.insertMany(uploadingFiles)
+
+    console.log("Uploaded Files:  ",uploadedFiles)
+
+    res.status(201).json({data:uploadedFiles, success:true})
 }
 catch (error) {
     console.error('Upload Error:', error);
@@ -138,13 +157,17 @@ console.log("fileId:", fileId);
 
 
 exports.deleteFile = async (req, res)=>{
+    
     try {
 
     const {fileId} = req.params
     const loggedInUserId = req.user.userId
 
-    const file = await fileModel.findById(fileId).populate('folderId')
+    const file = await fileModel.findById(fileId)
     if(!file) return res.status(404).json({success:false ,message:'file not found'})
+    console.log("File being deleted: ", file)
+    const publicId= file.publicId
+    // const ext= file.path.split(".")[3]
     
     const isOwner = file.folderId?.ownerId?.toString() === loggedInUserId
     const isUploader = file.user.toString() === loggedInUserId
@@ -152,9 +175,119 @@ exports.deleteFile = async (req, res)=>{
     if(!isOwner && !isUploader) return res.status(403).json({success:false, message:'Unauthorized to delete this file'})
     
     await fileModel.findByIdAndDelete(fileId)
-    res.status(200).json({success:true, message:'File Deleted Successfully'})
+    // console.log("Extension to delete:",ext)
+    console.log("Deleted from database  !!!")
+    console.log("Public id for delete: ",publicId)
+    
+    // await cloudinary.uploader.destroy(publicId, {invalidate:true})
+
+    let cloudDeleteRes
+
+    if(/\.(png|jpg|jpeg|avif|webp)$/i.test(file.path)){
+
+         cloudDeleteRes= await cloudinary.uploader.destroy(publicId, {invalidate:true})
+    }
+    else if(/\.(mp4|webm)$/i.test(file.path)){
+         cloudDeleteRes= await cloudinary.uploader.destroy(publicId, {resource_type:'video',invalidate:true})
+         
+        }
+    else{
+        cloudDelete= await cloudinary.uploader.destroy(publicId, {resource_type:'raw',invalidate:true})
+        cloudDeleteRes= (cloudDelete.result=="not found")?"ok":"not deleted"
+
+    }
+
+    console.log("Deleted from cloudinary too  !!! ",cloudDeleteRes)
+
+    res.status(200).json({success:true, message:`File Deleted Successfully: ${cloudDeleteRes.result}`})
         
     } catch (error) {
         res.status(500).json({success:false, message:'Error Deleting this file'})
+    }
+}
+
+exports.deleteFileMany = async (req, res)=>{
+    
+    try {
+
+    const files = req.body.files
+    const loggedInUserId = req.user.userId
+
+    if(!files || !Array.isArray(files) || files.length==0){
+        return res.status(404).json({success:false ,message:'file(s) not found'})
+    }
+
+    const folder = await folderModel.findById(files[0].folderId)
+    // console.log("File being deleted: ", file)
+    
+    const isOwner = folder?.ownerId?.toString() === loggedInUserId
+    const approvedFiles= []
+    const unapprovedFiles= []
+    
+    for(const file of files ){
+        const isUploader = file.user.toString() === loggedInUserId
+        if(!isUploader && !isOwner){
+            unapprovedFiles.push(file)
+        }
+        else{
+            approvedFiles.push(file)
+        }
+    }
+
+    if(approvedFiles.length == 0) return res.status(403).json({success:false, message:'Unauthorized to delete these file(s)'})
+    
+    const fileIdsArray = approvedFiles.map((file)=>file._id)
+
+    const query = { _id: {$in: fileIdsArray}}
+    const resDelFromDb = await fileModel.deleteMany(query)
+
+    // console.log("Extension to delete:",ext)
+    console.log(`Deleted ${resDelFromDb.deletedCount} files from database  !!!`)
+
+    const publicIdsArray = approvedFiles.map((file)=>file.publicId)
+    const imagePublicIds= []
+    const videoPublicIds= []
+    const rawPublicIds= []
+
+    // for(const file of approvedFiles){
+
+    //     if(/\.(png|jpg|jpeg|avif|webp)$/i.test(file.path)){
+
+    //      imagePublicIds.push(file.publicId)
+    //     }
+    //     else if(/\.(mp4|webm)$/i.test(file.path)){
+    //         videoPublicIds.push(file.publicId)
+
+    //         }
+    //     else{
+    //         rawPublicIds.push(file.publicId)
+    //     }
+    // }
+
+    console.log("Public id for delete: ",publicIdsArray)
+    let resDelCloudImg
+    let resDelCloudVideo
+    let resDelCloudRaw
+
+    // if(imagePublicIds.length>0){
+    //     resDelCloudImg= await deleteMultipleAssets(imagePublicIds)
+
+    // }
+    // if(videoPublicIds.length>0){
+    //     resDelCloudVideo = await deleteMultipleAssets(videoPublicIds)
+    // }
+    // if(rawPublicIds.length>0){
+    //     resDelCloudRaw = await deleteMultipleAssets(rawPublicIds)
+    // }
+
+    // const resDelCloud= {resDelCloudImg, resDelCloudVideo, resDelCloudRaw}
+    
+    const resDelCloud= await deleteMultipleAssets(publicIdsArray)
+    console.log("Deleted from cloudinary too: ",resDelCloud)    
+
+    res.status(200).json({success:true, deletedFiles:approvedFiles, undeletedFiles:unapprovedFiles})
+        
+    } catch (error) {
+        res.status(500).json({success:false, message:`Error Deleting these file(s): ${error}`})
     }
 }

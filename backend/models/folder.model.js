@@ -10,12 +10,12 @@ const folderSchema = new mongoose.Schema(
         },
         ownerId: {
             type: mongoose.Schema.Types.ObjectId,
-            ref: 'users',
+            ref: 'User',
             required: [true, 'owner id is required']
         },
         parentFolderId: {
             type: mongoose.Schema.Types.ObjectId,
-            ref: 'folders',
+            ref: 'Folder',
             default: null
         },
         isPublic: {
