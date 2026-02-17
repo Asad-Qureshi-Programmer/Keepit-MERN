@@ -3,6 +3,7 @@
 
 const express = require('express')
 const app = express()
+const PORT = process.env.PORT || 3000;
 const cors = require('cors')
 const userRoute= require('./routes/user.routes')
 const fileRoute = require('./routes/file.routes')
@@ -23,7 +24,8 @@ const cookieParser = require('cookie-parser')
 // using "process.env.varName"
 
 app.use(cors({
-  origin: 'http://localhost:5173',
+//   origin: 'http://localhost:5173',
+  origin: 'https://keepitapp.vercel.app',
   credentials: true
 }));
 
@@ -44,6 +46,6 @@ app.get('/api/server',(req,res)=>{
 })
 
 
-app.listen(3000, ()=>{
+app.listen(PORT, ()=>{
     console.log("Server Started on 3000")
 })
