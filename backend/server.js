@@ -24,8 +24,7 @@ const cookieParser = require('cookie-parser')
 // using "process.env.varName"
 
 app.use(cors({
-//   origin: 'http://localhost:5173',
-  origin: 'https://keepitapp.vercel.app',
+  origin: ['https://keepitapp.vercel.app', 'http://localhost:5173'],
   credentials: true
 }));
 

@@ -504,7 +504,7 @@ const FolderPage = () => {
                   [file.path]: true,
                 }))
               }
-              className={`group relative rounded-xl border-2 transition-all duration-200 cursor-pointer overflow-hidden
+              className={`group relative rounded-xl border-2 transition-all duration-200 w-[250px] h-fit cursor-pointer overflow-hidden
                 ${isSelected 
                   ? 'border-blue-500 bg-blue-50 shadow-lg scale-[1.02]' 
                   : 'border-gray-200 bg-white hover:border-gray-300 hover:shadow-md'

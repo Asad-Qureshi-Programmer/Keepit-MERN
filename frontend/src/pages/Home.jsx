@@ -571,7 +571,7 @@ const Home = () => {
   {/* Create New Folder Form */}
   {createFolder && (
     <form
-      className="group relative flex flex-col justify-center items-center px-4 py-3 rounded-xl border-2 border-dashed border-blue-400 bg-blue-50 hover:bg-blue-100 transition-all duration-200 w-[140px] animate-fadeIn"
+      className="group relative flex flex-col justify-center items-center px-4 py-3 rounded-xl border-2 border-dashed border-blue-400 bg-blue-50 hover:bg-blue-100 transition-all duration-200 w-[140px] h-fit animate-fadeIn"
       onSubmit={(e) => handleCreateFolder(e)}
     >
       <div className="relative">
@@ -609,7 +609,7 @@ const Home = () => {
       return (
         <div
           key={i}
-          className={`group relative flex flex-col justify-center items-center px-4 py-3 rounded-xl cursor-pointer transition-all duration-200 w-[140px]
+          className={`group relative flex flex-col justify-center items-center px-4 py-3 rounded-xl cursor-pointer transition-all duration-200 w-[140px] h-fit
             ${isSelected 
               ? 'bg-blue-50 ring-2 ring-blue-500 shadow-lg scale-105' 
               : 'bg-white hover:bg-gray-50 hover:shadow-md border border-gray-200 hover:border-gray-300'
@@ -759,7 +759,7 @@ const Home = () => {
                 [file.path]: true,
               }))
             }
-            className={`group relative rounded-xl border-2 transition-all duration-200 cursor-pointer w-[250px] overflow-hidden
+            className={`group relative rounded-xl border-2 transition-all duration-200 cursor-pointer h-fit w-[250px] overflow-hidden
               ${isSelected 
                 ? 'border-blue-500 bg-blue-50 shadow-lg scale-[1.02]' 
                 : 'border-gray-200 bg-white hover:border-gray-300 hover:shadow-md'

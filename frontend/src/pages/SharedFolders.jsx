@@ -47,7 +47,7 @@ const SharedFolders = () => {
 
               <div
                 key={i}
-                className="group border border-gray-200 hover:shadow-md hover:bg-gray-50 hover:border-gray-300 bg-white relative flex flex-col justify-center align-middle items-center px-2 py-3 w-[150px] rounded-xl  "
+                className="group h-fit border border-gray-200 hover:shadow-md hover:bg-gray-50 hover:border-gray-300 bg-white relative flex flex-col justify-center align-middle items-center px-2 py-3 w-[150px] rounded-xl  "
                 onDoubleClick={() => navigate(`/home/folder/${folder._id}`, {state: folder})}
               >
                 <img
