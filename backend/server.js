@@ -29,7 +29,7 @@ const cookieParser = require('cookie-parser')
 // }));
 
 app.use(cors({
-  origin: '*',      
+  origin: true,      
   credentials: true  
 }));
 
