@@ -271,6 +271,38 @@ const FolderPage = () => {
     
       let displayFiles= query ? sortedFiles() :folderFiles[folderid]
 
+
+      const isMobile = () => 'ontouchstart' in window || navigator.maxTouchPoints > 0;
+
+      const handleTouchStart = (e, item, isFile) => {
+  // Prevent context menu/text selection while holding
+  pressTimer.current = setTimeout(() => {
+    if (isFile) {
+      handleCheckedFiles(e, item);
+    } else {
+      handleCheckedFolders(e, item);
+    }
+    // Optional: Small vibration for feedback
+    if (navigator.vibrate) navigator.vibrate(50);
+    
+    pressTimer.current = null; // Clear timer so handleTouchEnd knows it was a long press
+  }, 500); // 500ms for long press
+};
+
+const handleTouchEnd = (e, item, isFile) => {
+  if (pressTimer.current) {
+    // If the timer is still running, user lifted finger quickly -> it's a CLICK
+    clearTimeout(pressTimer.current);
+    pressTimer.current = null;
+
+    if (isFile) {
+      setShowFullView((prev) => ({ ...prev, [item.path]: true }));
+    } else {
+      navigate(`folder/${item._id}`, { state: item });
+    }
+  }
+};
+
   return (
     <>
 
@@ -497,13 +529,18 @@ const FolderPage = () => {
         return (
           <React.Fragment key={i}>
             <div
-              onClick={(e) => handleCheckedFiles(e, file)}
-              onDoubleClick={() =>
-                setShowFullView((prev) => ({
-                  ...prev,
-                  [file.path]: true,
-                }))
-              }
+
+              onTouchStart={(e) => handleTouchStart(e, file, true)}
+              onTouchEnd={(e) => handleTouchEnd(e, file, true)}
+              onContextMenu={(e) => e.preventDefault()}
+
+                        onClick={(e) => {
+                if (!isMobile()) handleCheckedFiles(e, file);
+              }}
+              onDoubleClick={() => {
+                if (!isMobile()) setShowFullView(prev => ({ ...prev, [file.path]: true }));
+              }}
+
               className={`group relative rounded-xl border-2 transition-all duration-200 w-[250px] h-fit cursor-pointer overflow-hidden
                 ${isSelected 
                   ? 'border-blue-500 bg-blue-50 shadow-lg scale-[1.02]' 

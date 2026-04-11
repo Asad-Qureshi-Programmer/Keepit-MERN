@@ -89,6 +89,11 @@ const Home = () => {
   const [showFullView, setShowFullView] = useState({});
   const navigate = useNavigate();
    const fileInput = useRef(null)
+    const pressTimer = useRef(null);
+
+  const isMobile = () => 'ontouchstart' in window || navigator.maxTouchPoints > 0;
+
+
 
   useEffect(() => {
     const fetchUserData = async () => {
@@ -316,6 +321,38 @@ const Home = () => {
 
   console.log("Files display: ", displayFiles)
   console.log("CHECKED FILES: ", checkedFiles)
+
+
+ 
+
+const handleTouchStart = (e, item, isFile) => {
+  // Prevent context menu/text selection while holding
+  pressTimer.current = setTimeout(() => {
+    if (isFile) {
+      handleCheckedFiles(e, item);
+    } else {
+      handleCheckedFolders(e, item);
+    }
+    // Optional: Small vibration for feedback
+    if (navigator.vibrate) navigator.vibrate(50);
+    
+    pressTimer.current = null; // Clear timer so handleTouchEnd knows it was a long press
+  }, 500); // 500ms for long press
+};
+
+const handleTouchEnd = (e, item, isFile) => {
+  if (pressTimer.current) {
+    // If the timer is still running, user lifted finger quickly -> it's a CLICK
+    clearTimeout(pressTimer.current);
+    pressTimer.current = null;
+
+    if (isFile) {
+      setShowFullView((prev) => ({ ...prev, [item.path]: true }));
+    } else {
+      navigate(`folder/${item._id}`, { state: item });
+    }
+  }
+};
 
   return (
     <>
@@ -605,17 +642,31 @@ const Home = () => {
   {!foldersError && folders.length > 0 &&
     folders.map((folder, i) => {
       const isSelected = checkedFolders.includes(folder);
-     
+ 
+
       return (
         <div
           key={i}
-          className={`group relative flex flex-col justify-center items-center px-4 py-3 rounded-xl cursor-pointer transition-all duration-200 w-[140px] h-fit
+          className={`disable-browser-behavior group relative flex flex-col justify-center items-center px-4 py-3 rounded-xl cursor-pointer transition-all duration-200 w-[140px] h-fit
             ${isSelected 
               ? 'bg-blue-50 ring-2 ring-blue-500 shadow-lg scale-105' 
               : 'bg-white hover:bg-gray-50 hover:shadow-md border border-gray-200 hover:border-gray-300'
             }`}
-          onClick={(e) => handleCheckedFolders(e, folder)}
-          onDoubleClick={() => navigate(`folder/${folder._id}`, { state: folder })}
+
+            onTouchStart={(e) => handleTouchStart(e, folder, false)}
+            onTouchEnd={(e) => handleTouchEnd(e, folder, false)}
+            onContextMenu={(e) => e.preventDefault()} // Stops browser menu
+
+          onClick={(e) => {
+    if (!isMobile()) handleCheckedFolders(e, folder);
+  }}
+          
+          onDoubleClick={() => {
+      if (!isMobile()) {
+        // Desktop: Double click opens
+        navigate(`folder/${folder._id}`, { state: folder });
+      }
+    }}
         >
           {/* Selection Checkbox Indicator - Top Left */}
           <div className="absolute top-2 left-2 z-10">
@@ -744,28 +795,33 @@ const Home = () => {
            
 
 {!filesError && files.length > 0 && displayFiles?.length>0 ? (
-  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-10">
+  <div className="disable-browser-behavior grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-10">
     {displayFiles.map((file, i) => {
       let filename = file.originalname + "." + file.path.split(".").pop();
       const isSelected = checkedFiles.some(f=>f._id===file._id);
       
+      
       return (
         <React.Fragment key={file.path}>
           <div
-            onClick={(e) => handleCheckedFiles(e, file)}
-            onDoubleClick={() =>
-              setShowFullView((prev) => ({
-                ...prev,
-                [file.path]: true,
-              }))
-            }
+
+            onTouchStart={(e) => handleTouchStart(e, file, true)}
+  onTouchEnd={(e) => handleTouchEnd(e, file, true)}
+  onContextMenu={(e) => e.preventDefault()}
+
+            onClick={(e) => {
+    if (!isMobile()) handleCheckedFiles(e, file);
+  }}
+  onDoubleClick={() => {
+    if (!isMobile()) setShowFullView(prev => ({ ...prev, [file.path]: true }));
+  }}
             className={`group relative rounded-xl border-2 transition-all duration-200 cursor-pointer h-fit w-[250px] overflow-hidden
               ${isSelected 
                 ? 'border-blue-500 bg-blue-50 shadow-lg scale-[1.02]' 
                 : 'border-gray-200 bg-white hover:border-gray-300 hover:shadow-md'
               }`}
           >
-            
+          
 
             {/* Action Buttons - Show on Hover */}
             <div className="absolute top-3 right-3 z-20 flex gap-3 opacity-0 group-hover:opacity-100 transition-opacity">

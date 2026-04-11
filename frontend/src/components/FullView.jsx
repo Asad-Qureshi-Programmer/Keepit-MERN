@@ -167,135 +167,94 @@ const FullView = ({ files, filepath, filename, setShowFullView }) => {
     );
   };
 
-  return (
+ return (
     <>
-      <div
-        className="fixed z-20 top-0 left-0 right-0 bottom-0 w-full h-full
-       flex flex-col justify-center align-middle items-center "
-
-       
-      >
-        <div className="absolute top-0 left-0 right-0 bottom-0 w-full h-full bg-black opacity-80 backdrop-blur-2xl "></div>
-
-        <div className="absolute top-5 w-full  text-white flex justify-between px-16 z-60 align-middle">
-          <h2 className="text-xl font-medium ">{fileName+"."+filePath.split('.').pop()}</h2>
+      <div className="fixed z-[100] top-0 left-0 right-0 bottom-0 w-full h-full flex flex-col bg-black/95 backdrop-blur-xl">
+        
+        {/* --- 1. HEADER AREA (Filename + Close) --- */}
+        <div className="w-full h-20 flex justify-between items-center px-6 md:px-16 z-[70] bg-black/40">
+          <h2 className="text-white text-lg md:text-xl font-medium truncate max-w-[70%]">
+            {fileName + "." + filePath.split('.').pop()}
+          </h2>
           <button
-            onClick={() =>
-              setShowFullView((prev) => ({ ...prev, [filepath]: false }))
-            }
-            className="px-3 py-1  hover:bg-gray-600 rounded-full"
+            onClick={() => setShowFullView((prev) => ({ ...prev, [filepath]: false }))}
+            className="p-2 text-white/70 hover:text-white hover:bg-white/10 rounded-full transition-all"
           >
-            <RxCross2 size={30} />
+            <RxCross2 size={32} />
           </button>
         </div>
 
+        {/* --- 2. NAVIGATION BUTTONS (Z-index adjusted) --- */}
         <button
           onClick={() => setButtonClicked({ right: true, left: false })}
-          className="fixed top-[45%] flex items-center justify-center w-20 h-20  right-10 text-white text-lg  rounded-full  hover:bg-gray-600 z-50 hover:scale-110 transition-transform duration-110 active:scale-105"
+          className="fixed top-1/2 -translate-y-1/2 right-4 md:right-10 text-white p-3 rounded-full hover:bg-white/10 z-[80] transition-all"
         >
-          <IoIosArrowForward size={50}/>
+          <IoIosArrowForward size={45}/>
         </button>
         <button
           onClick={() => setButtonClicked({ right: false, left: true })}
-          className="fixed top-[45%] flex items-center justify-center left-10 text-white w-20 h-20 text-lg rounded-full  hover:bg-gray-600 z-50 hover:scale-110 transition-transform duration-110 active:scale-105 "
+          className="fixed top-1/2 -translate-y-1/2 left-4 md:left-10 text-white p-3 rounded-full hover:bg-white/10 z-[80] transition-all"
         >
-          <IoIosArrowForward size={50} className="rotate-180"/>
+          <IoIosArrowForward size={45} className="rotate-180"/>
         </button>
 
-        <div className=" text-white w-[90%] h-[90%]  p-10 pt-0 flex flex-col z-20 justify-center align-middle items-center "
-        
-        >
-          {
-            /\.(png|jpg|jpeg|avif|webp)$/i.test(filePath) ? (
-              <PanZoom>
-
-                <img
-                src={filePath}
-                alt=""
-                className="w-[60%] h-[70%] object-contain pointer-events-none no-browser-zoom"
-                draggable={false}
-              />
-              </PanZoom>
-            ) : /\.(pdf)$/i.test(filePath) ? (
-              <iframe
-                src={filePath}
-                frameborder="0"
-                title="Pdf"
-                height="90%"
-                width="70%"
-              />
-            ) : /\.(xlsx|docx|pptx|doc|ppt|xls)$/i.test(filePath) ? (
-              <div className="overflow-auto ">
+        {/* --- 3. MAIN CONTENT STAGE (With Padding) --- */}
+        <div className="flex-1 w-full flex items-center justify-center p-6 md:p-12 lg:p-20 overflow-hidden z-20">
+          <div className="w-full h-full flex items-center justify-center">
+            {
+              /\.(png|jpg|jpeg|avif|webp)$/i.test(filePath) ? (
+                <PanZoom>
+                  <img
+                    src={filePath}
+                    alt={fileName}
+                    className="max-w-full max-h-full object-contain pointer-events-none no-browser-zoom shadow-2xl"
+                    draggable={false}
+                  />
+                </PanZoom>
+              ) : /\.(pdf)$/i.test(filePath) ? (
                 <iframe
-                  src={`https://view.officeapps.live.com/op/embed.aspx?src=${encodeURIComponent(
-                    filePath
-                  )}&mode=Edit`}
-                  height="600px"
-                  width="1000px"
-                ></iframe>
-              </div>
-            ) : /\.(mp4|webm)$/i.test(filePath) ? (
-              <video controls src={filePath} width="100%" />
-            ) : /\.(mp3|wav)$/i.test(filePath) ? (
-              <audio controls src={filePath} width="200%" />
-            ) : /\.(txt)$/i.test(filePath) ? (
-              <PanZoom><pre className="bg-white text-black p-5" >{data}</pre></PanZoom>
-            ) : /\.(csv)$/i.test(filePath) ? (
-              <PanZoom>
-              <div className="bg-white text-black p-5" >
-
-               { csvTable()}
-              </div> 
-              </PanZoom>
-            ) : /\.(json)$/i.test(filePath) ? (
-              <PanZoom>
-              <div className="bg-white text-black p-5 flex items-center max-h-[90%] overflow-auto ">
-
-                {jsonTable()}
-              </div>
-              </PanZoom>
-            ) : <div onClick={(e)=>{stopOpening(e)}} className="w-full h-full flex flex-col justify-center font-semibold text-gray-600 ">
-                <div className="text-center text-white text-3xl">Can't Open? Download instead</div>
-                <a className="h-[80%] flex items-center justify-center"  href={filepath}  ><IoIosCloudDownload size="70%" color="white" onMouseOver={({target})=>target.style.color="blue"}
-                onMouseOut={({target})=>target.style.color="white"} /></a>
-              </div>
-
-            /*
-                else if (/\.(mp4|webm)$/i.test(filepath)) {
-    return <video controls src={filepath} width="400" />;
-  } else if (/\.(mp3|wav)$/i.test(filepath)) {
-    return <audio controls src={filepath} />;
-  } else if (/\.(txt)$/i.test(filepath)) {
-    return <pre>{data}</pre>;
-  }
-  else if (/\.(csv)$/i.test(filepath)){
-    return csvTable()
-  }
-  else if (/\.(json)$/i.test(filepath)){
-    return jsonTable()
-  }
-                */
-          }
+                  src={filePath}
+                  frameBorder="0"
+                  title="Pdf"
+                  className="w-full h-full max-w-4xl bg-white rounded-lg shadow-2xl"
+                />
+              ) : /\.(xlsx|docx|pptx|doc|ppt|xls)$/i.test(filePath) ? (
+                <div className="w-full h-full max-w-5xl overflow-hidden rounded-lg shadow-2xl bg-white">
+                  <iframe
+                    src={`https://view.officeapps.live.com/op/embed.aspx?src=${encodeURIComponent(filePath)}&mode=Edit`}
+                    className="w-full h-full"
+                  />
+                </div>
+              ) : /\.(mp4|webm)$/i.test(filePath) ? (
+                <video controls src={filePath} className="max-w-full max-h-full rounded-lg" />
+              ) : /\.(mp3|wav)$/i.test(filePath) ? (
+                <div className="bg-white/10 p-10 rounded-2xl backdrop-blur-md">
+                   <audio controls src={filePath} className="w-64 md:w-96" />
+                </div>
+              ) : /\.(txt|csv|json)$/i.test(filePath) ? (
+                <PanZoom>
+                  <div className="bg-white text-black p-6 md:p-10 rounded-lg shadow-2xl max-h-[80vh] overflow-auto">
+                    {/\.(txt)$/i.test(filePath) && <pre>{data}</pre>}
+                    {/\.(csv)$/i.test(filePath) && csvTable()}
+                    {/\.(json)$/i.test(filePath) && jsonTable()}
+                  </div>
+                </PanZoom>
+              ) : (
+                <div className="flex flex-col items-center gap-6">
+                  <div className="text-center text-white text-2xl md:text-3xl font-light">
+                    Preview not available for this format
+                  </div>
+                  <a 
+                    href={filePath} 
+                    className="p-6 bg-white/10 hover:bg-white/20 rounded-full transition-all text-white"
+                  >
+                    <IoIosCloudDownload size={80} />
+                  </a>
+                </div>
+              )
+            }
+          </div>
         </div>
-
-          {/* <div className="fixed top-[90%] text-white text-2xl flex gap-3 z-50" >
-
-        <button
-        onClick={() => setZoom((z)=>Math.min(z+0.5,MAX_ZOOM))}
-        className=" bg-blue-800 p-5 rounded-full"
-        >
-          +
-        </button>
-
-        <button
-        onClick={() => setZoom((z)=>Math.max(z-0.5,MIN_ZOOM))}
-        className=" bg-blue-800 px-3 py-3 rounded-full"
-        >
-          -
-        </button>
-
-          </div> */}
-
       </div>
     </>
   );

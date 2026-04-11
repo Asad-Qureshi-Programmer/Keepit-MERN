@@ -23,9 +23,14 @@ const cookieParser = require('cookie-parser')
 // then we need to download npm package "dotenv" to access that variable, import dotenv in server.js, then run "dotenv.config()" there
 // using "process.env.varName"
 
+// app.use(cors({
+//   origin: ['https://keepitapp.vercel.app', 'http://localhost:5173'],
+//   credentials: true
+// }));
+
 app.use(cors({
-  origin: ['https://keepitapp.vercel.app', 'http://localhost:5173'],
-  credentials: true
+  origin: '*',      
+  credentials: true  
 }));
 
 
@@ -46,5 +51,5 @@ app.get('/api/server',(req,res)=>{
 
 
 app.listen(PORT, ()=>{
-    console.log("Server Started on 3000")
+    console.log("Server Started on",PORT)
 })

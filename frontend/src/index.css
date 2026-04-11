@@ -73,4 +73,26 @@ body{
   animation: spin 1s linear infinite;
 }
 
+/* Apply this class to your Folder and File <div> elements */
+.disable-browser-behavior {
+  /* Prevents text selection while holding down */
+  -webkit-user-select: none;  
+  user-select: none;
 
+  /* Prevents the iOS/Android "save image" or "open link" popup */
+  -webkit-touch-callout: none; 
+
+  /* Ensures double-tap zoom is disabled */
+  touch-action: manipulation;
+
+  /* Prevents the gray highlight box on tap (Android) */
+  -webkit-tap-highlight-color: transparent;
+}
+
+
+.no-browser-zoom {
+  touch-action: none; /* Stops the browser from native-zooming the page */
+  max-width: 100%;
+  max-height: 100%;
+  object-fit: contain;
+}
