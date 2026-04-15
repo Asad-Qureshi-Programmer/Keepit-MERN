@@ -245,13 +245,13 @@ const FilePreview = ({ filepath }) => {
     </div>
   } else if (/\.(mp3|wav|m4a)$/i.test(filepath)) {
     return <>
-    <div className="h-full flex flex-col gap-0 relative items-center justify-end">
+    <div className="h-full w-full flex flex-col gap-0 relative items-center justify-end">
 
       <div className=" absolute top-0 bottom-0 right-0 left-0 bg-gray-800 rounded-full  flex items-center justify-center pb-10">
         <MdAudiotrack color="white" size="70%" />
       </div>
 
-    <audio className=" border-4 border-gray-800 rounded-full" src={filepath} controls></audio>
+    <audio className=" border-4 border-gray-800 rounded-full w-full" src={filepath} controls></audio>
     </div>
     </> 
   } else if (/\.(txt)$/i.test(filepath)) {

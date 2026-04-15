@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { useNavigate, Link } from "react-router-dom";
+import { useNavigate, Link, useLocation } from "react-router-dom";
 import { handleError, handleSuccess } from "../../utils/utils";
 import api from "../../api/axios";
 import { Cloud, Mail, Lock, User, Eye, EyeOff } from "lucide-react";
@@ -7,9 +7,12 @@ import { SpinningRay } from '../../components/small/SpinningRay';
 
 const Register = () => {
   const navigate = useNavigate();
+  const location = useLocation()
   const [error, setError] = useState();
   const [isLoading, setIsLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
+
+  const from = location.state?.from || "/home";
 
   const [signupInfo, setSignupInfo] = useState({
     username: '',
@@ -50,7 +53,7 @@ const Register = () => {
       handleSuccess(res?.data.message);
 
       setTimeout(() => {
-        navigate('/login');
+        navigate('/login', { state: { from }, replace:true });
       }, 1000);
 
     } catch (err) {

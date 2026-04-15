@@ -64,16 +64,16 @@ const FullView = ({ files, filepath, filename, setShowFullView }) => {
       </div>
 
       {/* 2. NAVIGATION ARROWS */}
-      <div className="absolute inset-0 z-[110] pointer-events-none flex items-center justify-between px-2 md:px-10">
+      <div className="absolute inset-0 z-[110] pointer-events-none flex items-center justify-between px-0 md:px-10">
         <button
           onClick={handlePrev}
-          className="pointer-events-auto p-4 text-white/50 hover:text-white transition-colors"
+          className="pointer-events-auto p-2 text-white/50 hover:text-white transition-colors "
         >
           <IoIosArrowForward size={45} className="rotate-180" />
         </button>
         <button
           onClick={handleNext}
-          className="pointer-events-auto p-4 text-white/50 hover:text-white transition-colors"
+          className="pointer-events-auto p-2 text-white/50 hover:text-white transition-colors"
         >
           <IoIosArrowForward size={45} />
         </button>
@@ -119,8 +119,8 @@ const FullView = ({ files, filepath, filename, setShowFullView }) => {
             ) : /\.(mp4|webm)$/i.test(filePath) ? (
               <video controls src={filePath} className="max-w-full max-h-full rounded-lg" onCanPlay={() => setIsLoading(false)} />
             ) : /\.(mp3|wav|m4a)$/i.test(filePath) ? (
-              <div className="bg-white/10 p-10 rounded-2xl backdrop-blur-md">
-                 <audio controls src={filePath} className="w-64 md:w-96" onCanPlay={() => setIsLoading(false)} />
+              <div className="bg-white/10 p-10 mt-5 rounded-2xl backdrop-blur-md">
+                 <audio controls src={filePath} className="w-62 md:w-96" onCanPlay={() => setIsLoading(false)} />
               </div>
             ) : /\.(txt|csv|json)$/i.test(filePath) ? (
               <PanZoom>

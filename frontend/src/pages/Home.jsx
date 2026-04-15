@@ -38,7 +38,7 @@ export const handleDownloadFile = async (fileId, filename, filepath, e) => {
 
       const link = document.createElement("a");
       link.href = url;
-      link.download = filename + `.${filepath.split('.')[3]}`;
+      link.download = filename + `.${filepath.split('.').pop()}`;
       document.body.appendChild(link);
       link.click();
       link.remove();
@@ -780,10 +780,10 @@ const handleDeselectAll = () => {
               <option value="video">video</option>
             </select>
           </div> */}
-          <div className="static flex-1 w-full rounded-2xl flex flex-wrap gap-5 md:gap-10 mb-5 px-5 py-2 overflow-y-auto"
+          <div className="static flex-1 w-full rounded-2xl flex flex-col items-start justify-start gap-5 md:gap-10 mb-5 px-5 py-2 overflow-y-auto"
           onClick={handleDeselectAll}
           >
-            <div className="flex flex-wrap  gap-3 md:gap-6 w-full">
+            <div className="flex flex-wrap items-start justify-start  gap-3 md:gap-6 h-fit w-full">
   {/* Create New Folder Form */}
   {createFolder && (
     <form
@@ -796,7 +796,7 @@ const handleDeselectAll = () => {
           alt="folder"
           
           height="auto"
-          className="w-[50px] md:w-[10px] mb-2 opacity-80"
+          className="w-[50px] md:w-[100px] mb-2 opacity-80"
         />
         <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2">
           <svg className="w-6 h-6 text-blue-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -979,7 +979,7 @@ const handleDeselectAll = () => {
            
 
 {!filesError && files.length > 0 && displayFiles?.length>0 ? (
-  <div className="disable-browser-behavior grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6 md:gap-10 w-full">
+  <div className="disable-browser-behavior flex flex-wrap items-start justify-start gap-6 md:gap-10 h-fit w-full">
     {displayFiles.map((file, i) => {
       let filename = file.originalname + "." + file.path.split(".").pop();
       const isSelected = checkedFiles.some(f=>f._id===file._id);

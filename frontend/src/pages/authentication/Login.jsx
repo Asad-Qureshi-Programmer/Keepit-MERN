@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react'
-import { useNavigate, Link } from 'react-router-dom'
+import { useNavigate, Link, useLocation } from 'react-router-dom'
 import api from '../../api/axios'
 import axios from 'axios'
 import { Cloud, Mail, Lock, Eye, EyeOff } from 'lucide-react'
@@ -12,6 +12,12 @@ const Login = () => {
   const [error, setError] = useState()
   const [showPassword, setShowPassword] = useState(false)
   const [isLoading, setIsLoading] = useState(false)
+  const location = useLocation(); // Add this
+  
+  // Get the path the user came from, or default to /home
+  const from = (location.state?.from)? location.state?.from.toString() : "/home";
+  console.log("To login route from: ", location.state?.from)
+  console.log("To login route from from: ", from)
 
   const [loginInfo, setLoginInfo] = useState({
     email: '',
@@ -54,7 +60,7 @@ const Login = () => {
       localStorage.setItem('accessToken', res.data.accessToken)
      
       setTimeout(() => {
-        navigate('/home')
+        navigate(from, {replace:true})
       }, 1000);
 
     }
@@ -201,6 +207,8 @@ const Login = () => {
           <div className="text-center">
             <Link
               to="/register"
+              state={{ from: from }}
+              replace={true}
               className="inline-flex items-center justify-center w-full px-4 py-2.5 border border-gray-300 rounded-lg font-semibold text-sm text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-4 focus:ring-gray-200 transition-colors"
             >
               Create new account

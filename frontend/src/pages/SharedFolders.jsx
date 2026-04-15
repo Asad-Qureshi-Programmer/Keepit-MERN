@@ -111,8 +111,8 @@ const handleDeselectAll = () => {
 
   return (
     < >
-      <div className="p-8 h-full flex flex-col">
-    <h1 className='font-semibold text-2xl ml-2'>Shared Files</h1>
+      <div className="p-6 px-0 flex flex-col h-[calc(100vh-180px)] md:h-[calc(100vh-130px)]" onClick={()=>setCheckedFolders([])} >
+    <h1 className='font-semibold text-2xl ml-2 px-6'>Shared Files</h1>
         
         {shareFolderPopup && (
   /* 1. BACKDROP: z-[200] ensures it's above everything. Click background to close. */
@@ -240,14 +240,14 @@ const handleDeselectAll = () => {
 )}
 
         {!sharedFoldersError && sharedFolders.length > 0 && (
-  <div className="flex-1 flex flex-wrap gap-8 w-full px-2 py-5 overflow-y-auto" onClick={() => setCheckedFolders([])}>
+  <div className="flex flex-wrap items-start justify-start gap-8 w-full px-6 py-5 overflow-y-auto">
     {sharedFolders.map((folder, i) => {
       const isSelected = checkedFolders.some(f => f._id === folder._id);
 
       return (
         <div
           key={folder._id || i}
-          className={`group h-fit border transition-all duration-200 relative flex flex-col justify-center items-center px-2 py-3 w-[150px] rounded-xl cursor-pointer
+          className={`group h-fit border transition-all duration-200 relative flex flex-col justify-center items-center px-2 py-2 md:px-2 md:py-3 w-[110px] md:w-[140px] rounded-xl cursor-pointer
             ${isSelected 
               ? 'border-blue-500 bg-blue-50 shadow-lg scale-105' 
               : 'border-gray-200 bg-white hover:shadow-md hover:bg-gray-50 hover:border-gray-300'
@@ -283,6 +283,7 @@ const handleDeselectAll = () => {
               ? 'opacity-100 pointer-events-auto' 
               : 'opacity-0 pointer-events-none group-hover:opacity-100 group-hover:pointer-events-auto'
             }`}>
+
             <button
               onTouchEnd={(e) => {
                 e.preventDefault()
@@ -306,13 +307,12 @@ const handleDeselectAll = () => {
           <img
             src="/assets/folderimg.svg"
             alt="folder"
-            width="100px"
             height="auto"
-            className={`transition-transform duration-200 ${isSelected ? 'scale-110' : 'group-hover:scale-105'}`}
+            className={`w-[50px] md:w-[100px] transition-transform duration-200 ${isSelected ? 'scale-110' : 'group-hover:scale-105'}`}
           />
           
-          <div className="text-center mt-2 w-full px-2">
-            <p className="text-sm font-semibold text-gray-900 truncate" title={folder.name}>
+          <div className="text-center mt-1 md:mt-2 w-full px-1 truncate">
+            <p className="text-sm font-medium text-gray-900 truncate" title={folder.name}>
               {folder.name}
             </p>
             <p className="text-xs text-gray-500 truncate">

@@ -128,7 +128,7 @@ exports.download = async(req,res)=>{
 console.log("fileId:", fileId);
 
     const file = await fileModel.findOne({
-        user: loggedInUserId,
+        // user: loggedInUserId,
         _id: fileId
     })
 

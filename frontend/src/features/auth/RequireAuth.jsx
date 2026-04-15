@@ -11,6 +11,7 @@ const RequireAuth = ({children}) => {
 
 const [isAuthorized, setIsAuthorized] = useState(false)
 const [loading, setLoading] = useState(true)
+const location = useLocation()
 
 const token = localStorage.getItem('accessToken')
 // console.log("Token from requireAuth: ",token)
@@ -52,7 +53,7 @@ verifyToken()}, [token])
 
 if(loading) return <p>Loading...</p>
 
-if(!isAuthorized) return <Navigate to="/login" />
+if(!isAuthorized) return <Navigate to="/login" state={{ from: location.pathname }} replace />
 
   return children
 }
