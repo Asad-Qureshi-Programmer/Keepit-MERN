@@ -4,11 +4,14 @@ import api from '../../api/axios'
 import axios from 'axios'
 import { Cloud, Mail, Lock, Eye, EyeOff } from 'lucide-react'
 import { handleError, handleSuccess } from '../../utils/utils'
+import FadeLoader from "react-spinners/FadeLoader";
+import { SpinningRay } from '../../components/small/SpinningRay'
 
 const Login = () => {
   const navigate = useNavigate()
   const [error, setError] = useState()
   const [showPassword, setShowPassword] = useState(false)
+  const [isLoading, setIsLoading] = useState(false)
 
   const [loginInfo, setLoginInfo] = useState({
     email: '',
@@ -37,13 +40,14 @@ const Login = () => {
     }
     
     try{
+      setIsLoading(true)
       const res= await api.post('/api/user/login',{
         email:email,
         password:password
       }, {
         withCredentials: true,
       })
-      
+      setIsLoading(false)
       console.log("Logged in successfully: ", res.data.accessToken)
       
       handleSuccess(res?.data.message)
@@ -55,7 +59,7 @@ const Login = () => {
 
     }
     catch(err){
-     
+        setIsLoading(false)
         console.log("Error in Login: ",err)
 
         // Handle error message from server (if available)
@@ -173,9 +177,13 @@ const Login = () => {
             {/* Submit Button */}
             <button
               type="submit"
-              className="w-full bg-gradient-to-r from-blue-600 to-blue-700 text-white font-semibold py-2.5 px-4 rounded-lg hover:from-blue-700 hover:to-blue-800 focus:outline-none focus:ring-4 focus:ring-blue-300 transition-all duration-200 shadow-md hover:shadow-lg transform hover:scale-[1.02] mt-2"
+              className="flex justify-center gap-1 w-full bg-gradient-to-r from-blue-600 to-blue-700 text-white font-semibold py-2.5 px-4 rounded-lg hover:from-blue-700 hover:to-blue-800 focus:outline-none focus:ring-4 focus:ring-blue-300 transition-all duration-200 shadow-md hover:shadow-lg transform hover:scale-[1.02] mt-2"
             >
-              Sign In
+      {
+        isLoading &&
+      (<SpinningRay size={18} color='text-white' />)
+      }     
+      Sign In 
             </button>
           </form>
 

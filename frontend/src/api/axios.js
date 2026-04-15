@@ -2,13 +2,13 @@ import axios from 'axios'
 import refreshAccessToken from '../features/auth/authAPI'
 
 export const apiNoAuth = axios.create({
-  baseURL: 'http://localhost:3000',
+  baseURL: 'http://127.0.0.1:3000',
   // baseURL: 'https://keepit-ezrl.onrender.com',
   withCredentials: true,
 })
 
 const api = axios.create({
-  baseURL: 'http://localhost:3000',
+  baseURL: 'http://127.0.0.1:3000',
   // baseURL: 'https://keepit-ezrl.onrender.com',
   withCredentials: true,
 })

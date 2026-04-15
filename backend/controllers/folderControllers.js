@@ -1,6 +1,7 @@
-const folderModel = require('../models/folder.model')
-const fileModel = require('../models/files.model')
-const userModel = require('../models/user.model')
+const folderModel = require('../models/folder.model.js')
+const fileModel = require('../models/files.model.js')
+const userModel = require('../models/user.model.js')
+const { deleteMultipleAssets } = require('../utils/cloudinary')
 
 exports.create = async (req , res)=>{
 
@@ -145,5 +146,45 @@ exports.getFolderSharedFiles = async(req,res)=>{
         res.status(200).json({success:true, files})
     } catch (error) {
         res.status(500).json({success:false, message:"Error Fetching Folder's Shared Files"})
+    }
+}
+
+exports.deleteFolders = async(req,res)=>{
+    try {
+        const folders = req.body.folders
+        const loggedInUserId = req.user.userId
+
+        if(!folders || !Array.isArray(folders) || folders.length==0){
+            return res.status(404).json({success:false ,message:'folder(s) not found'})
+        }
+
+        for(const folder of folders){
+            const isOwner = folder?.ownerId?.toString() === loggedInUserId
+            if(!isOwner) return res.status(401).json({success:false, message:'Unauthorized folder delete request'})
+        }
+
+        const folderIds = folders.map(folder=>folder._id)
+        const files = await fileModel.find({folderId: {$in: folderIds}}).select("_id publicId")
+        const fileIds = files.map(file=>file._id)
+        const filePublicIds = files.map(file=>file.publicId)
+
+        let delFromCloud;
+        let delFromDb;
+        if(files.length > 0){
+            delFromDb = await fileModel.deleteMany({_id: {$in: fileIds}})
+            console.log(`Deleted files from database: `, delFromDb)
+            
+            delFromCloud = await deleteMultipleAssets(filePublicIds)
+        }else{
+            console.log("No files in folders!")
+        }
+
+        const delFolders = await folderModel.deleteMany({_id:{$in: folderIds}})
+        console.log(`Deleted folders: `, delFolders)
+
+        res.status(200).json({success:true, deletedFolders:delFolders, deletedFiles:delFromDb, message:'Folders deleted successfully'})
+
+    } catch (error) {
+        res.status(500).json({success:false, message:"Error Deleting Folder"})
     }
 }

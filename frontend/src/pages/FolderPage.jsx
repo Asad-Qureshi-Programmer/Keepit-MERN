@@ -10,6 +10,7 @@ import { handleError, handleSuccess } from '../utils/utils'
 import { IoClose,IoCheckmark, IoShareSocialOutline, IoCopy } from 'react-icons/io5';
 import { useSearch } from "../contexts/SearchContext";
 import {getMatchScore}  from "../utils/searchUtils";
+import { CgSpinner } from "react-icons/cg";
 
 const FolderPage = () => {
   const {folderid} = useParams()
@@ -36,11 +37,16 @@ const FolderPage = () => {
   const [selectedFileName, setSelectedFileName] = useState("")
 
   const fileInput = useRef(null)
+  const pressTimer = useRef(null);
+  const startPos = useRef({ x: 0, y: 0 });
+  
   const [checkedFiles, setCheckedFiles] = useState([])
   
   const folderLink= useRef(null)
   const [shareFolderPopup, setShareFolderPopup] = useState(false)
   const [copied, setCopied] = useState(false);
+
+  const [individualDeleting, setIndividualDeleting] = useState({});
   
   // console.log("Folder id: ", folderid)
   // console.log("Folder data: ", folderData)
@@ -274,32 +280,61 @@ const FolderPage = () => {
 
       const isMobile = () => 'ontouchstart' in window || navigator.maxTouchPoints > 0;
 
-      const handleTouchStart = (e, item, isFile) => {
-  // Prevent context menu/text selection while holding
+   const handleTouchStart = (e, item, isFile) => {
+  // Don't call preventDefault here or scrolling will break
+  const touch = e.touches[0];
+  startPos.current = { x: touch.clientX, y: touch.clientY };
+
   pressTimer.current = setTimeout(() => {
-    if (isFile) {
-      handleCheckedFiles(e, item);
-    } else {
-      handleCheckedFolders(e, item);
-    }
-    // Optional: Small vibration for feedback
-    if (navigator.vibrate) navigator.vibrate(50);
+    handleCheckedFiles(e, item);
     
-    pressTimer.current = null; // Clear timer so handleTouchEnd knows it was a long press
-  }, 500); // 500ms for long press
+    if (navigator.vibrate) navigator.vibrate(50);
+    pressTimer.current = null;
+  }, 500);
+};
+
+const handleTouchMove = (e) => {
+  if (!pressTimer.current) return;
+
+  const touch = e.touches[0];
+  const distanceX = Math.abs(touch.clientX - startPos.current.x);
+  const distanceY = Math.abs(touch.clientY - startPos.current.y);
+
+  // If the finger moves more than 10 pixels in any direction, it's a scroll
+  if (distanceX > 10 || distanceY > 10) {
+    clearTimeout(pressTimer.current);
+    pressTimer.current = null;
+  }
 };
 
 const handleTouchEnd = (e, item, isFile) => {
   if (pressTimer.current) {
-    // If the timer is still running, user lifted finger quickly -> it's a CLICK
     clearTimeout(pressTimer.current);
     pressTimer.current = null;
 
-    if (isFile) {
-      setShowFullView((prev) => ({ ...prev, [item.path]: true }));
+    // Check if we are in selection mode
+    const isSelectionMode = checkedFiles.length > 0
+
+    // If selection mode is active, every tap is a selection toggle
+    if (isSelectionMode) {
+      // preventDefault here stops the 'onClick' from firing 300ms later
+      if (e.cancelable) e.preventDefault(); 
+      handleCheckedFiles(e, item);
     } else {
-      navigate(`folder/${item._id}`, { state: item });
+      // Normal Mode: Open the file/folder
+      if (e.cancelable) e.preventDefault();
+      if (isFile) {
+        setShowFullView((prev) => ({ ...prev, [item.path]: true }));
+      } else {
+        navigate(`folder/${item._id}`, { state: item });
+      }
     }
+  }
+};
+
+const handleDeselectAll = () => {
+  if (checkedFiles.length > 0 || checkedFolders.length > 0) {
+    setCheckedFiles([]);
   }
 };
 
@@ -308,8 +343,8 @@ const handleTouchEnd = (e, item, isFile) => {
 
     {
       shareFolderPopup && (
-  <div className='z-50 fixed inset-0  bg-opacity-50  flex justify-center items-center'>
-    <div className="bg-white relative w-full max-w-lg p-6 rounded-2xl border border-gray-200 shadow-2xl mx-4">
+  <div className='z-50 fixed inset-0 bg-white/50  bg-opacity-50  flex justify-center items-center'>
+    <div className="bg-white relative w-[80%] md:w-full max-w-lg p-6 rounded-2xl border border-gray-200 shadow-2xl mx-4">
       
       {/* Close Button */}
       <button 
@@ -341,23 +376,46 @@ const handleTouchEnd = (e, item, isFile) => {
         
         <button 
           onClick={() => {
-            const folderlink = folderLink.current;
-            const folderlinkText = folderlink.innerText;
-            navigator.clipboard.writeText(folderlinkText);
+    const textToCopy = folderLink.current?.innerText || window.location.href;
 
-            setCopied(true);
-            setTimeout(() => setCopied(false), 2000);
+    // 1. Try modern Clipboard API
+    if (navigator.clipboard && window.isSecureContext) {
+      navigator.clipboard.writeText(textToCopy)
+        .then(() => handleCopySuccess())
+        .catch(() => fallbackCopy(textToCopy));
+    } else {
+      // 2. Fallback for HTTP or older browsers
+      fallbackCopy(textToCopy);
+    }
 
-            const range = document.createRange();
-            range.selectNodeContents(folderlink);
-            const selection = window.getSelection();
-            selection.removeAllRanges();
-            selection.addRange(range);
-            setTimeout(() => {
-              selection.removeAllRanges();
-            }, 2000);
-          }}
-          className={`px-5 py-3 rounded-lg font-semibold transition-all shadow-sm hover:shadow-md flex items-center gap-2 whitespace-nowrap ${
+    function handleCopySuccess() {
+      setCopied(true);
+      setTimeout(() => setCopied(false), 2000);
+      
+      // Visual Selection (Optional)
+      const range = document.createRange();
+      range.selectNodeContents(folderLink.current);
+      const selection = window.getSelection();
+      selection.removeAllRanges();
+      selection.addRange(range);
+      setTimeout(() => selection.removeAllRanges(), 2000);
+    }
+
+    function fallbackCopy(text) {
+      const textArea = document.createElement("textarea");
+      textArea.value = text;
+      document.body.appendChild(textArea);
+      textArea.select();
+      try {
+        document.execCommand('copy');
+        handleCopySuccess();
+      } catch (err) {
+        console.error('Fallback copy failed', err);
+      }
+      document.body.removeChild(textArea);
+    }
+  }}
+          className={`px-5 py-3 z-30 rounded-lg font-semibold transition-all shadow-sm hover:shadow-md flex items-center gap-2 whitespace-nowrap ${
             copied 
               ? 'bg-green-500 hover:bg-green-600 text-white' 
               : 'bg-blue-600 hover:bg-blue-700 text-white'
@@ -465,14 +523,24 @@ const handleTouchEnd = (e, item, isFile) => {
   </div>
 )}
     
-    <div className='px-12 py-5'>
-      <div className='flex  justify-between items-center '>
+    <div className='px-0 md:px-12 py-2 md:py-5'>
+      <div className='flex md:flex-row flex-col px-8 justify-between md:items-center items-start'>
+
+        <div className='flex justify-between items-center w-full'>
       <h2 className='text-2xl font-semibold my-3'>{folderData.name}</h2>
+
+      <div className='flex gap-2'>
+      <button className='bg-blue-600 md:hidden font-medium text-white p-2 rounded-full ' onClick={()=>setShareFolderPopup(true)} ><IoShareSocialOutline size={18} /></button>
+      <button className='bg-blue-600 md:hidden rounded-full font-medium text-white p-2' onClick={()=>navigate(-1)} ><IoClose size={18}/>   </button>
+      </div>
+
+        </div>
+
       <div className='flex gap-3 items-center justify-center'>
         
       { checkedFiles.length>0 &&
       <div className='flex justify-center items-center gap-3'>
-        <div className="flex whitespace-nowrap gap-1 justify-center items-center text-md">
+        <label className="flex whitespace-nowrap gap-1 justify-center items-center text-md">
               <input type="checkbox" name="selectall" id="selectall" className="w-3 h-3"
             
               onChange={(e)=>{
@@ -485,24 +553,24 @@ const handleTouchEnd = (e, item, isFile) => {
               }}
               />
               select all files
-              </div>
+              </label>
 
 
               <button onClick={()=>setDeleteConfirmationPopup(true)} className="bg-red-500 text-lg px-3 py-1 rounded-lg font-medium text-white whitespace-nowrap" >Delete File(s)</button>
       </div>
               }
       
-      <button className='bg-blue-600 rounded-lg font-medium text-white py-1 px-4' onClick={()=>setShareFolderPopup(true)} >Share Folder</button>
-      <button className='bg-blue-600 rounded-lg font-medium text-white py-1 px-4' onClick={()=>navigate(-1)} >back</button>
+      <button className='hidden md:inline bg-blue-600 rounded-lg font-medium text-white py-1 px-4' onClick={()=>setShareFolderPopup(true)} >Share Folder</button>
+      <button className='hidden md:inline bg-blue-600 rounded-lg font-medium text-white py-1 px-4' onClick={()=>navigate(-1)} >back   </button>
       </div>
       </div>
       <input ref={fileInput} type="file" name="fileinfolder" id="fileinfolder" multiple onChange={(e)=>handleFileUpload(e)} className='hidden' />
 
       {
         fileUploadingPopup && (
-          <div className='z-50 absolute right-10 bottom-10 bg-white w-[400px] rounded-2xl shadow-2xl px-8 py-6 border border-color flex flex-col gap-3'>
+          <div className='z-50 absolute left-6 md:left-auto md:right-10 bottom-10 bg-white w-[200px] md:w-[400px] rounded-2xl shadow-2xl px-4 md:px-8 py-3 md:py-6 border border-color flex flex-col gap-3'>
             <div className='flex justify-between'>
-            <p className='text-lg font-medium'>{fileUploadedPopup?`Uploaded ${numFilesUploading} File`:`Uploading ${numFilesUploading} File`}</p>
+            <p className='text-sm md:text-lg font-medium'>{fileUploadedPopup?`Uploaded ${numFilesUploading} File`:`Uploading ${numFilesUploading} File`}</p>
             <button
             onClick={()=>setfileUploadingPopup(false)}>
             X</button>
@@ -511,7 +579,7 @@ const handleTouchEnd = (e, item, isFile) => {
 
             {selectedFileName.map((filename, key)=>(
               
-              <p key={key} className='text-lg w-full whitespace-nowrap overflow-ellipsis truncate' >{filename}</p>
+              <p key={key} className='text-md md:text-lg w-full whitespace-nowrap overflow-ellipsis truncate' >{filename}</p>
             ))
           }
           </div>
@@ -519,9 +587,11 @@ const handleTouchEnd = (e, item, isFile) => {
         )
       }
 
-<div className='w-full py-5'>
+<div className='w-full py-2 pb-5 md:py-5 h-[calc(100vh-220px)] overflow-y-auto'>
   {folderFiles[folderid]?.length > 0 && displayFiles?.length>0 ? (
-    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-10">
+    <div className="disable-browser-behavior md:left-70 flex flex-wrap  gap-8 md:gap-10 pt-1 "
+    onClick={handleDeselectAll}
+    >
       {displayFiles?.map((file, i) => {
         let filename = file.originalname + "." + file.path.split(".").pop();
         const isSelected = checkedFiles.some(f=>f._id===file._id);
@@ -531,30 +601,50 @@ const handleTouchEnd = (e, item, isFile) => {
             <div
 
               onTouchStart={(e) => handleTouchStart(e, file, true)}
+              onTouchMove={handleTouchMove}
               onTouchEnd={(e) => handleTouchEnd(e, file, true)}
               onContextMenu={(e) => e.preventDefault()}
 
-                        onClick={(e) => {
-                if (!isMobile()) handleCheckedFiles(e, file);
-              }}
-              onDoubleClick={() => {
-                if (!isMobile()) setShowFullView(prev => ({ ...prev, [file.path]: true }));
-              }}
+              onClick={(e) => {
+    if (!isMobile()) handleCheckedFiles(e, file);
+  }}
+  onDoubleClick={() => {
+    if (!isMobile()) setShowFullView(prev => ({ ...prev, [file.path]: true }));
+  }}
 
-              className={`group relative rounded-xl border-2 transition-all duration-200 w-[250px] h-fit cursor-pointer overflow-hidden
+              className={`group relative rounded-xl border-2 transition-all duration-200 w-[80%]  mx-auto md:mx-0 md:w-[250px] h-fit cursor-pointer overflow-hidden
                 ${isSelected 
                   ? 'border-blue-500 bg-blue-50 shadow-lg scale-[1.02]' 
                   : 'border-gray-200 bg-white hover:border-gray-300 hover:shadow-md'
                 }`}
             >
               
+              {/* Selection Checkbox */}
+                {(checkedFiles.length > 0 ) && (
+                  <div className="absolute top-2 left-2 z-30">
+                    <div className={`w-6 h-6 rounded-full border-2 flex items-center justify-center
+                      ${isSelected ? 'bg-blue-500 border-blue-500' : 'bg-white/50 border-gray-300'}`}>
+                      {isSelected && <IoCheckmark className="text-white" />}
+                    </div>
+                  </div>
+                )}
 
               {/* Action Buttons - Show on Hover */}
-              <div className="absolute top-3 right-3 z-20 flex gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
+              <div className={`absolute top-3 right-3 z-20 flex gap-2  transition-opacity ${isSelected 
+      ? 'opacity-100 pointer-events-auto' 
+      : 'opacity-0 pointer-events-none group-hover:opacity-100 group-hover:pointer-events-auto'
+    }`}>
                 <button
+                onTouchEnd={(e) => {
+      e.stopPropagation(); 
+     handleDownloadFile(file._id, file.originalname, file.path, e);
+    }}
+
                   onClick={(e) => {
                     e.stopPropagation();
-                    handleDownloadFile(file._id, file.originalname, e);
+                    if(!isMobile()){
+                      
+                    handleDownloadFile(file._id, file.originalname, file.path, e);}
                   }}
                   className="p-2 bg-white rounded-lg shadow-md hover:bg-blue-50 hover:shadow-lg transition-all"
                   title="Download file"
@@ -567,9 +657,21 @@ const handleTouchEnd = (e, item, isFile) => {
                 {/* Optional: Add delete button if you have handleDeleteFile function */}
                 {typeof handleDeleteFile !== 'undefined' && (
                   <button
-                    onClick={(e) => {
+                  onTouchEnd={async (e) => {
+      e.stopPropagation(); // Stops the folder from deselecting
+     setIndividualDeleting(prev => ({...prev, [file._id]: true})); // Start feedback
+      await handleDeleteFile(e, file._id);
+      setIndividualDeleting(prev => ({...prev, [file._id]: false}));
+    }}
+
+                    onClick={async (e) => {
                       e.stopPropagation();
-                      handleDeleteFile(e, file._id);
+                      if(!isMobile()){
+                        
+                     setIndividualDeleting(prev => ({...prev, [file._id]: true})); // Start feedback
+      await handleDeleteFile(e, file._id);
+      setIndividualDeleting(prev => ({...prev, [file._id]: false}));
+                    }
                     }}
                     className="p-2 bg-white rounded-lg shadow-md hover:bg-red-50 hover:shadow-lg transition-all"
                     title="Delete file"
@@ -580,6 +682,15 @@ const handleTouchEnd = (e, item, isFile) => {
                   </button>
                 )}
               </div>
+
+              {individualDeleting[file._id] && (
+  <div className="absolute inset-0 z-40 bg-white/60 backdrop-blur-[1px] flex items-center justify-center">
+    <div className="flex flex-col items-center gap-2">
+      <CgSpinner className="animate-spin text-red-600" size={30} />
+      <span className="text-xs font-bold text-red-600 uppercase tracking-tighter">Deleting...</span>
+    </div>
+  </div>
+)}
 
               {/* Card Content */}
               <div className="p-4">

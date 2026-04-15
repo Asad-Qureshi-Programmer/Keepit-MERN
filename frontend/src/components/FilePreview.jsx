@@ -184,8 +184,10 @@ const FilePreview = ({ filepath }) => {
           
           <iframe
            
-            src={filepath+"#toolbar=0&navpanes=0&scrollbar=0"}
+            // src={filepath+"#toolbar=0&navpanes=0&scrollbar=0"}
+            src={`https://docs.google.com/viewer?url=${encodeURIComponent(filepath)}&embedded=true`}
             className="pointer-events-none overflow-hidden scale-125 "
+            style={{touchAction:'none'}}
             width="110%"
             height="100%"
             title="PDF Viewer"
@@ -210,7 +212,7 @@ const FilePreview = ({ filepath }) => {
     return (
       <div className="h-full w-full">
         <iframe
-        className="pointer-events-none overflow-hidden -ml-20 -mt-12 "
+        className="pointer-events-none overflow-hidden -ml-20 -mt-12 mx-auto"
           src={`https://view.officeapps.live.com/op/embed.aspx?src=${encodeURIComponent(
             filepath
           )}`}

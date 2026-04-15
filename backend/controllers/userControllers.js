@@ -217,7 +217,7 @@ exports.refresh = (req,res)=>{
 exports.logout = (req, res)=>{
     const cookies = req.cookies
     console.log("cookies from logout route: ",cookies)
-    if(!cookies?.jwt) return res.sendStatus(204).json({message:"No content to send for this request except headers"})    //req succesful, no content
+    if(!cookies?.jwt) return res.status(204).json({message:"No content to send for this request except headers"})    //req succesful, no content
     res.clearCookie('jwt', {
         httpOnly:true,
         sameSite: 'Lax',

@@ -15,9 +15,6 @@ router.get('/:folderId/share-access', authValidator, folderControllers.addShared
 router.get('/shared', authValidator, folderControllers.getSharedFolders)
 router.get('/:folderId', authValidator, folderControllers.getFolderById)
 router.get('/:folderId/shared-files', folderControllers.getFolderSharedFiles)
-//get folderfiles, Anyone with the link can view  No auth required
-// router.get('/:folderId', folderControllers.getFolderContents)
-
-// router.post('/:folderId', authValidator, folderControllers.uploadInFolder)
+router.post('/delete',authValidator, folderControllers.deleteFolders)
 
 module.exports = router
