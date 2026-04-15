@@ -243,7 +243,7 @@ const FilePreview = ({ filepath }) => {
       </div>
       <video className="pointer-events-none"  src={filepath} height="100%" ></video>;
     </div>
-  } else if (/\.(mp3|wav)$/i.test(filepath)) {
+  } else if (/\.(mp3|wav|m4a)$/i.test(filepath)) {
     return <>
     <div className="h-full flex flex-col gap-0 relative items-center justify-end">
 

@@ -118,7 +118,7 @@ const FullView = ({ files, filepath, filename, setShowFullView }) => {
               </div>
             ) : /\.(mp4|webm)$/i.test(filePath) ? (
               <video controls src={filePath} className="max-w-full max-h-full rounded-lg" onCanPlay={() => setIsLoading(false)} />
-            ) : /\.(mp3|wav)$/i.test(filePath) ? (
+            ) : /\.(mp3|wav|m4a)$/i.test(filePath) ? (
               <div className="bg-white/10 p-10 rounded-2xl backdrop-blur-md">
                  <audio controls src={filePath} className="w-64 md:w-96" onCanPlay={() => setIsLoading(false)} />
               </div>
@@ -131,7 +131,7 @@ const FullView = ({ files, filepath, filename, setShowFullView }) => {
                 </div>
               </PanZoom>
             ) : (
-              <div className="flex flex-col items-center gap-6">
+              <div ref={()=>setIsLoading(false)} className="flex flex-col items-center gap-6">
                 <div className="text-center text-white text-2xl md:text-3xl font-light">Preview not available</div>
                 <a href={filePath} className="p-6 bg-white/10 hover:bg-white/20 rounded-full text-white">
                   <IoIosCloudDownload size={80} />

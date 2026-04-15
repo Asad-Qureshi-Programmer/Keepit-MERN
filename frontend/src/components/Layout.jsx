@@ -182,11 +182,11 @@ const closeOpenDropdown = useCallback((e) => {
             </div>
               
             {menuDropdown && 
-              <div className="absolute w-[260px] shadow-xl h-fit right-5 top-14 border border-gray-300 p-4 px-5 rounded-xl bg-white">
+              <div className="z-300 absolute w-[260px] shadow-xl h-fit right-5 top-14 border border-gray-300 p-4 px-5 rounded-xl bg-white">
                 <div className="flex flex-col w-full py-3 items-center gap-2 text-md font-semibold primetext-color ">
               
               <Cloud className="h-10 w-10 text-white bg-blue-600 p-2 rounded-full" />
-              
+              <span className="text-2xl font-bold text-gray-900">KeepIt</span>
               <div className="flex-col w-full justify-start items-center ">
               <p class=" text-lg whitespace-normal text-wrap break-all font-semibold">{userData? userData.email : "Loading..."}</p>
               <p className=" text-gray-500 text-md">{userData? userData.username : "Loading..."}</p>
@@ -217,19 +217,20 @@ const closeOpenDropdown = useCallback((e) => {
                 <MdStar size={18} />
                 Shared
               </NavLink>
-
+              <div className="flex justify-center items-center">
               <button
             className="w-fit hover:bg-red-600 transition-all text-start rounded-lg py-2 px-4 bg-red-500 text-white  mb-5"
             onClick={() => onLogoutClick()}
           >
             Logout
           </button>
+          </div>
             </ul>
             </div>
             }
 
           </nav>
-          <div>
+          <div onClick={()=>setMenuDropdown(false)} >
             <div ref={mobileDropdownRef}>
             <button
               className="fixed md:hidden bottom-10 right-6 z-50 mx-auto primary-color rounded-full text-white text-lg px-5 py-5 m-5 flex justify-center gap-2 items-center mb-8"
