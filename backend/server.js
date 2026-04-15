@@ -23,15 +23,15 @@ const cookieParser = require('cookie-parser')
 // then we need to download npm package "dotenv" to access that variable, import dotenv in server.js, then run "dotenv.config()" there
 // using "process.env.varName"
 
-app.use(cors({
-  origin: ['https://keepitapp.vercel.app', 'http://localhost:5173'],
-  credentials: true
-}));
-
 // app.use(cors({
-//   origin: true,      
-//   credentials: true  
+//   origin: ['https://keepitapp.vercel.app', 'http://localhost:5173'],
+//   credentials: true
 // }));
+
+app.use(cors({
+  origin: true,      
+  credentials: true  
+}));
 
 
 app.use(cookieParser())    //!!!!!!! IMP !!!!this step must be done above all middlewares and routes 
